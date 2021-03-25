@@ -22,7 +22,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: Container(
+        color:Colors.white,
+        child:Center(
+          child:Text('hello\nFlutter\n\n기본적인 구현\n20194072 민새미', textAlign:TextAlign.center,
+              style:TextStyle(color:Colors.blue, fontSize:20)),
+        )
+      )
     );
   }
 }
