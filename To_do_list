@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class Todo{
-  bool isDone=false;
+  bool isDone;
   String title;
 
-  Todo(this.title);
+  Todo(this.title, {this.isDone=false});
 }
 
 class MyApp extends StatelessWidget {
@@ -42,17 +43,18 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   //할 일 객체를 ListTile 형태로 변경하는 메서드
-  Widget _buildItemWidget(Todo todo){
+  Widget _buildItemWidget(DocumentSnapshot doc){
+    final todo=Todo(doc['title'], isDone: doc['isDone']);
     return ListTile(
       onTap: () => _toggleTodo(todo), //완료/미완료
       title: Text(
         todo.title, //할 일
         style: todo.isDone //완료일 때는 스타일 적용
-        ?TextStyle(
+            ?TextStyle(
           decoration: TextDecoration.lineThrough, //취소선
           fontStyle: FontStyle.italic,  //이탤릭체
         )
-        :null,  //아무 스타일도 적용 안 함
+            :null,  //아무 스타일도 적용 안 함
       ),
       trailing: IconButton(
         icon: Icon(Icons.delete_forever),
@@ -82,7 +84,7 @@ class _TodoListPageState extends State<TodoListPage> {
       todo.isDone=!todo.isDone;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,19 +104,30 @@ class _TodoListPageState extends State<TodoListPage> {
                 ),
                 RaisedButton(
                   child: Text('추가'),
-                    onPressed: () => _addTodo(Todo(_todoController.text)),
+                  onPressed: () => _addTodo(Todo(_todoController.text)),
                 ),
               ],
             ),
-            Expanded(
-              child: ListView(
-                children: <Widget>[],
-              ),
+            StreamBuilder<QuerySnapshot>(
+              stream: Firestore.instance.collection('todo').snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator();
+                }
+                final documents = snapshot.data!.documents;
+                return Expanded(
+                  child: ListView(
+                    children: documents
+                        .map((doc) => _buildItemWidget(doc)).toList(),
+                  ),
+                );
+              },
             ),
+            
           ],
         ),
       ),
     );
   }
-
+  
 }
